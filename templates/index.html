@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello VVorld</title>
+    <script src="https://unpkg.com/htmx.org/dist/htmx.min.js"></script>
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="#">Home</a></li>
+                <li id="nav-login">
+                    <button hx-get="/login" hx-trigger="click" hx-swap="outerHTML" hx-target="#nav-login" hx-indicator=".loading">Login</button>
+                </li>
+            </ul>
+        </nav>
+    </header>
+    <h1 id="message">{{.Message}}</h1>
+    <button hx-get="/update" hx-trigger="click" hx-target="#message">Update Message</button>
+</body>
+</html>
