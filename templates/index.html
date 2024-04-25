@@ -10,13 +10,17 @@
 <body>
     <header>
         <nav>
-            <a href="#">home</a>
+            <a href="/">home</a>
             <div id="nav-login">
               <button id="login" hx-get="/login" hx-trigger="click" hx-swap="innerhtml" hx-target="#nav-login" hx-indicator=".loading">Log In</button>
-              <button id="signup">Sign Up</button>
+              <button id="signup" hx-get="/signup-form" hx-trigger="click" hx-swap="outerhtml" hx-target="#body-content" hx-indicator=".loading">Sign Up</button>
             </div>
         </nav>
     </header>
-    <p>App goes here!</p>
+    <div id="body-content">
+      <p>App goes here...
+      <p>Sign in or Sign Up!</p>
+      <!-- Sign up form will be loaded here -->
+    </div>
 </body>
 </html>
