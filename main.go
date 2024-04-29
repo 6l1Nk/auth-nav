@@ -11,15 +11,12 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
     tmpl.Execute(w, nil)
 }
 
-func loginHandler(w http.ResponseWriter, r *http.Request) {
-    // w.Write([]byte(`<button id="logout" hx-get="/logout" hx-trigger="click" hx-swap="innerHTML" hx-target="#nav-login" hx-indicator=".loading">Logout</button>`))
-    button := template.Must(template.ParseFiles("templates/logout-button.html"))
-    button.Execute(w, nil)
+func signinHandler(w http.ResponseWriter, r *http.Request) {
+    tmpl := template.Must(template.ParseFiles("templates/signin.html"))
+    tmpl.Execute(w, nil)
 }
 
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
-    // w.Write([]byte(`<button id="login" hx-get="/login" hx-trigger="click" hx-swap="innerHTML" hx-target="#nav-login" hx-indicator=".loading">Login</button>`))
-    // w.Write([]byte(`<button id="signup">Sign Up</button>`))
     loginSignupButtons := template.Must(template.ParseFiles("templates/login-signup-buttons.html"))
     loginSignupButtons.Execute(w, nil)
 }
@@ -32,6 +29,7 @@ func signUpHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
     http.HandleFunc("/", indexHandler)
     http.HandleFunc("/login", loginHandler)
+    http.HandleFunc("/signin", signinHandler)
     http.HandleFunc("/logout", logoutHandler)
     http.HandleFunc("/signup-form", signUpHandler)
     http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))

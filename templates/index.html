@@ -12,14 +12,13 @@
         <nav>
             <a href="/">home</a>
             <div id="nav-login">
-              <button id="login" hx-get="/login" hx-trigger="click" hx-swap="innerhtml" hx-target="#nav-login" hx-indicator=".loading">Log In</button>
+              <button id="login"><a href="/signin">Sign In</a></button>
               <button id="signup" hx-get="/signup-form" hx-trigger="click" hx-swap="outerhtml" hx-target="#body-content" hx-indicator=".loading">Sign Up</button>
             </div>
         </nav>
     </header>
     <div id="body-content">
       <p>{Landing page content}</p>
-      <!-- Sign up form will be loaded here -->
     </div>
 </body>
 </html>
