@@ -4,6 +4,9 @@ import (
     "fmt"
     "html/template"
     "net/http"
+    "database/sql"
+
+    _ "github.com/mattn/go-sqlite3"
 )
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
@@ -11,27 +14,86 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
     tmpl.Execute(w, nil)
 }
 
-func signinHandler(w http.ResponseWriter, r *http.Request) {
+func signInHandler(w http.ResponseWriter, r *http.Request) {
     tmpl := template.Must(template.ParseFiles("templates/signin.html"))
     tmpl.Execute(w, nil)
 }
 
-func logoutHandler(w http.ResponseWriter, r *http.Request) {
-    loginSignupButtons := template.Must(template.ParseFiles("templates/login-signup-buttons.html"))
-    loginSignupButtons.Execute(w, nil)
-}
-
 func signUpHandler(w http.ResponseWriter, r *http.Request) {
-    signUpForm := template.Must(template.ParseFiles("templates/signup.html"))
-    signUpForm.Execute(w, nil)
+    if r.Method == http.MethodGet {
+        tmpl := template.Must(template.ParseFiles("templates/signup.html"))
+        tmpl.Execute(w, nil)
+    }
+
+    if r.Method == http.MethodPost {
+        fmt.Println("post")
+        err := r.ParseForm()
+        if err != nil {
+            http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+            return
+        }
+
+        fmt.Println("canary")
+        // Parse form data
+        email := r.Form.Get("email")
+        password := r.Form.Get("password")
+        confirmPassword := r.Form.Get("confirm-password")
+
+        fmt.Println(email)
+        fmt.Println(password)
+        fmt.Println(confirmPassword)
+        // // Check if passwords match
+        // if password != confirmPassword {
+        //     http.Error(w, "Passwords do not match", http.StatusBadRequest)
+        //     return
+        // }
+        //
+        // Check if email already exists in the database
+        // var count int
+        // err = db.QueryRow("SELECT COUNT(*) FROM users WHERE email = ?", email).Scan(&count)
+        // if err != nil {
+        //     http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+        //     return
+        // }
+        // if count > 0 {
+        //     http.Error(w, "Email already exists", http.StatusConflict)
+        //     return
+        // }
+        //
+        // // Insert new user record into the database
+        // _, err = db.Exec("INSERT INTO users (email, password) VALUES (?, ?)", email, password)
+        // if err != nil {
+        //     http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+        //     return
+        // }
+        //
+        // // Success response
+        // w.WriteHeader(http.StatusCreated)
+        // fmt.Fprintf(w, "Account created successfully!")
+        tmpl := template.Must(template.ParseFiles("templates/index.html"))
+        tmpl.Execute(w, nil)
+    }
 }
 
 func main() {
+    db, err := sql.Open("sqlite3", "users.db")
+    if err != nil { 
+        panic(err)
+    }
+    defer db.Close()
+
+    _, err = db.Exec(`CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE,
+    password TEXT
+    )`)
+    if err != nil {
+        panic(err)
+    }
+
     http.HandleFunc("/", indexHandler)
-    http.HandleFunc("/login", loginHandler)
-    http.HandleFunc("/signin", signinHandler)
-    http.HandleFunc("/logout", logoutHandler)
-    http.HandleFunc("/signup-form", signUpHandler)
+    http.HandleFunc("/signin", signInHandler)
+    http.HandleFunc("/signup", signUpHandler)
     http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
     fmt.Println("Server is running on http://localhost:8080")
     http.ListenAndServe(":8080", nil)
