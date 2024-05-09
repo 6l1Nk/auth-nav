@@ -9,7 +9,13 @@ import (
 	"os"
 
 	_ "github.com/mattn/go-sqlite3"
+	"golang.org/x/crypto/bcrypt"
 )
+
+type SignUpFormData struct {
+	Email    string
+	Password string
+}
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseFiles("templates/index.html"))
@@ -19,62 +25,60 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 // func signInHandler(w http.ResponseWriter, r *http.Request) {
 //     tmpl := template.Must(template.ParseFiles("templates/signin.html"))
 //     tmpl.Execute(w, nil)
+// // Verify a password against the hashed password
+// err = bcrypt.CompareHashAndPassword(hashedPassword, []byte(formData.Password))
+// if err != nil {
+// 	fmt.Println("Password does not match hash:", err)
+// 	return
+// }
+// fmt.Println("Password matches hash!")
+// //
 // }
 
 func signUpHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
+	switch r.Method {
+	case http.MethodGet:
 		tmpl := template.Must(template.ParseFiles("templates/signup.html"))
 		tmpl.Execute(w, nil)
-	}
 
-	//	if r.Method == http.MethodPost {
-	//	    fmt.Println("post")
-	//	    err := r.ParseForm()
-	//	    if err != nil {
-	//	        http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	//	        return
-	//	    }
-	//
-	//	    fmt.Println("canary")
-	//	    // Parse form data
-	//	    email := r.Form.Get("email")
-	//	    password := r.Form.Get("password")
-	//	    confirmPassword := r.Form.Get("confirm-password")
-	//
-	//	    fmt.Println(email)
-	//	    fmt.Println(password)
-	//	    fmt.Println(confirmPassword)
-	//	    // // Check if passwords match
-	//	    // if password != confirmPassword {
-	//	    //     http.Error(w, "Passwords do not match", http.StatusBadRequest)
-	//	    //     return
-	//	    // }
-	//	    //
-	//	    // Check if email already exists in the database
-	//	    // var count int
-	//	    // err = db.QueryRow("SELECT COUNT(*) FROM users WHERE email = ?", email).Scan(&count)
-	//	    // if err != nil {
-	//	    //     http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	//	    //     return
-	//	    // }
-	//	    // if count > 0 {
-	//	    //     http.Error(w, "Email already exists", http.StatusConflict)
-	//	    //     return
-	//	    // }
-	//	    //
-	//	    // // Insert new user record into the database
-	//	    // _, err = db.Exec("INSERT INTO users (email, password) VALUES (?, ?)", email, password)
-	//	    // if err != nil {
-	//	    //     http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	//	    //     return
-	//	    // }
-	//	    //
-	//	    // // Success response
-	//	    // w.WriteHeader(http.StatusCreated)
-	//	    // fmt.Fprintf(w, "Account created successfully!")
-	//	    tmpl := template.Must(template.ParseFiles("templates/index.html"))
-	//	    tmpl.Execute(w, nil)
-	//	}
+	case http.MethodPost:
+		err := r.ParseForm()
+		if err != nil {
+			http.Error(w, "Bad Request", http.StatusBadRequest)
+			return
+		}
+
+		formData := SignUpFormData{
+			Email:    r.Form.Get("email"),
+			Password: r.Form.Get("password"),
+		}
+
+		// Generate a salted hash of the password
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(formData.Password), bcrypt.DefaultCost)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+
+		db, err := sql.Open("sqlite3", "./users.db")
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+		defer db.Close()
+
+		_, err = db.Exec("INSERT INTO users (email, password) VALUES (?, ?)", formData.Email, hashedPassword)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+
+		// Redirect to a success page
+		http.Redirect(w, r, "/success", http.StatusFound)
+
+	default:
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+	}
 }
 
 func initDatabase() {
@@ -85,10 +89,10 @@ func initDatabase() {
 	defer db.Close()
 
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        email TEXT UNIQUE,
-        password TEXT
-    )`)
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		email TEXT UNIQUE,
+		password TEXT
+		)`)
 	if err != nil {
 		panic(err)
 	}
@@ -99,7 +103,7 @@ func main() {
 
 	http.HandleFunc("/", indexHandler)
 	// http.HandleFunc("/signin", signInHandler)
-	// http.HandleFunc("/signup", signUpHandler)
+	http.HandleFunc("/sign-up", signUpHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	homeDir, err := os.UserHomeDir()
