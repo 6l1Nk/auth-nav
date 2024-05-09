@@ -2,13 +2,50 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
 	_ "github.com/mattn/go-sqlite3"
 )
+
+//TODOs
+// add logging of https requests, responses
+// add error logging
+// add a data access layer, abstract the sqlite3 implementation
+// distinctly test http operations and database interactions
+// setup testing for db, teardown testing of db
+// routing after successful signup
+// sign in functionality
+
+func TestMain(m *testing.M) {
+	// setup()
+	exitCode := m.Run()
+	teardown()
+	os.Exit(exitCode)
+}
+
+func teardown() {
+	db, err := sql.Open("sqlite3", "users.db")
+	if err != nil {
+		fmt.Printf("Teardown: Error opening db: %v\n", err)
+	}
+	defer db.Close()
+
+	del, err := db.Prepare("DELETE FROM users WHERE email = ?")
+	if err != nil {
+		fmt.Printf("Teardown: Error preparing delete statment: %v\n", err)
+	}
+	defer del.Close()
+
+	_, err = del.Exec("test@example.com")
+	if err != nil {
+		fmt.Printf("Teardown: Error executing delete statement: %v\n", err)
+	}
+}
 
 func TestDatabaseSchema(t *testing.T) {
 	initDatabase()
