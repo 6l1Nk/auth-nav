@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,23 +8,6 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 )
-
-func initDatabase() {
-	db, err := sql.Open("sqlite3", "users.db")
-	if err != nil {
-		panic(err)
-	}
-	defer db.Close()
-
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS users (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		email TEXT UNIQUE,
-		password TEXT
-		)`)
-	if err != nil {
-		panic(err)
-	}
-}
 
 func main() {
 	initDatabase()

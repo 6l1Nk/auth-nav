@@ -1,13 +1,12 @@
 package main
 
 import (
-	// "bytes"
-	// "math"
-	"database/sql"
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"html/template"
 	"net/http"
+	// "bytes"
+	// "math"
 	// "net/url"
 	// "strconv"
 	//
@@ -15,33 +14,15 @@ import (
 	// "go.uber.org/zap"
 )
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(template.ParseFiles("templates/index.html"))
-	tmpl.Execute(w, nil)
-}
-
 type SignUpFormData struct {
 	Email    string
 	Password string
 }
 
-// func indexHandler(w http.ResponseWriter, r *http.Request) {
-// 	tmpl := template.Must(template.ParseFiles("templates/index.html"))
-// 	tmpl.Execute(w, nil)
-// }
-
-// func signInHandler(w http.ResponseWriter, r *http.Request) {
-//     tmpl := template.Must(template.ParseFiles("templates/signin.html"))
-//     tmpl.Execute(w, nil)
-// // Verify a password against the hashed password
-// err = bcrypt.CompareHashAndPassword(hashedPassword, []byte(formData.Password))
-// if err != nil {
-// 	fmt.Println("Password does not match hash:", err)
-// 	return
-// }
-// fmt.Println("Password matches hash!")
-// //
-// }
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl := template.Must(template.ParseFiles("templates/index.html"))
+	tmpl.Execute(w, nil)
+}
 
 func signUpHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
@@ -64,20 +45,13 @@ func signUpHandler(w http.ResponseWriter, r *http.Request) {
 		// Generate a salted hash of the password
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(formData.Password), bcrypt.DefaultCost)
 		if err != nil {
-			fmt.Println("Error:", err)
+			http.Error(w, fmt.Sprintf("Internal Server Error: %v", err), http.StatusInternalServerError)
 			return
 		}
 
-		db, err := sql.Open("sqlite3", "./users.db")
+		err = saveNewUser(formData.Email, hashedPassword)
 		if err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-		defer db.Close()
-
-		_, err = db.Exec("INSERT INTO users (email, password) VALUES (?, ?)", formData.Email, hashedPassword)
-		if err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("Internal Server Error: %v", err), http.StatusInternalServerError)
 			return
 		}
 
@@ -88,6 +62,19 @@ func signUpHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}
 }
+
+// func signInHandler(w http.ResponseWriter, r *http.Request) {
+//     tmpl := template.Must(template.ParseFiles("templates/signin.html"))
+//     tmpl.Execute(w, nil)
+// // Verify a password against the hashed password
+// err = bcrypt.CompareHashAndPassword(hashedPassword, []byte(formData.Password))
+// if err != nil {
+// 	fmt.Println("Password does not match hash:", err)
+// 	return
+// }
+// fmt.Println("Password matches hash!")
+// //
+// }
 
 // type handlerWithError func(w http.ResponseWriter, r *http.Request) error
 //
