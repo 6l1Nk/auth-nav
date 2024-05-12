@@ -38,7 +38,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 func signUpHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		tmpl := template.Must(template.ParseFiles("templates/signup.html"))
+		tmpl := template.Must(template.ParseFiles("templates/sign-up.html"))
 		tmpl.Execute(w, nil)
 
 	case http.MethodPost:
@@ -52,6 +52,9 @@ func signUpHandler(w http.ResponseWriter, r *http.Request) {
 			Email:    r.Form.Get("email"),
 			Password: r.Form.Get("password"),
 		}
+
+		fmt.Println(formData.Email)
+		fmt.Println(formData.Password)
 
 		// Generate a salted hash of the password
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(formData.Password), bcrypt.DefaultCost)

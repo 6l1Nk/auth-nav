@@ -134,7 +134,7 @@ func TestIndexHandler(t *testing.T) {
 		t.Errorf("handler returned unexpected body: missing %v", loginButtonHTML)
 	}
 
-	signUpButtonHTML := "<button id=\"signup\">"
+	signUpButtonHTML := "<button id=\"sign-up\">"
 	if !strings.Contains(res.Body.String(), signUpButtonHTML) {
 		t.Errorf("handler returned unexpected body: missing %v", signUpButtonHTML)
 	}
@@ -158,7 +158,7 @@ func TestSignUpHandler_Get(t *testing.T) {
 			http.StatusOK)
 	}
 
-	signUpFormHTML := "<form action=\"/signup\" method=\"post\" class=\"signup-form\">"
+	signUpFormHTML := "<form action=\"/sign-up\" method=\"post\" class=\"signup-form\">"
 
 	if !strings.Contains(res.Body.String(), signUpFormHTML) {
 		t.Errorf("handler returned unexpected body: missing %v",
